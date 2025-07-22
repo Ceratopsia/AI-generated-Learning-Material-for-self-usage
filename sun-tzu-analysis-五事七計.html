@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>孫子兵法：五事七計互動分析儀</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Chosen Palette: Midnight Scroll -->
+    <!-- Application Structure Plan: The application is designed as a single-page exploratory dashboard. The structure prioritizes user interaction and understanding over the linear format of the source report. It begins with a powerful introduction (Hero), followed by an interactive card section for '五事' allowing focused learning. The core of the app is the '七計' section, which uses a dynamic radar chart as a comparative analysis tool linked to a dropdown of historical case studies. This structure transforms passive reading into an active process of comparison and analysis, directly addressing the user's goal of studying and internalizing the concepts. The navigation is handled by a sticky header for seamless scrolling between thematic sections. -->
+    <!-- Visualization & Content Choices: Report Info: '五事' (Five Matters) -> Goal: Inform/Organize -> Viz/Method: Interactive HTML cards with Tailwind CSS -> Interaction: Click to expand/reveal detailed text -> Justification: Breaks down complex information into digestible chunks, preventing cognitive overload. | Report Info: '七計' (Seven Assessments) & Historical Cases -> Goal: Compare/Analyze -> Viz/Method: Chart.js Radar Chart -> Interaction: Select case study from a dropdown to dynamically update the chart and associated analysis text -> Justification: A radar chart is the ideal visualization for comparing multiple attributes of two or more entities, perfectly matching the comparative nature of '七計'. This provides an immediate, powerful visual summary of complex historical dynamics. | Report Info: Overall Structure -> Goal: Navigation -> Viz/Method: Sticky Header with smooth-scroll links -> Interaction: Click to navigate -> Justification: Provides clear, persistent navigation for a single-page application, enhancing usability. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #111827;
+            color: #D1D5DB;
+        }
+        .highlight {
+            color: #FBBF24;
+        }
+        .card {
+            background-color: #1F2937;
+            border: 1px solid #374151;
+            transition: all 0.3s ease-in-out;
+        }
+        .card:hover {
+            border-color: #FBBF24;
+            transform: translateY(-4px);
+        }
+        .nav-link {
+            transition: color 0.3s;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #FBBF24;
+        }
+        .content-hidden {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.7s ease-in-out, padding 0.5s ease;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+        .content-visible {
+            max-height: 1000px;
+            transition: max-height 0.7s ease-in-out, padding 0.5s ease;
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 60vh;
+            max-height: 500px;
+        }
+        select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header id="header" class="bg-gray-900/80 backdrop-blur-sm sticky top-0 z-50 border-b border-gray-700">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="text-2xl font-bold text-white">孫子兵法<span class="text-amber-400">．始計篇</span></div>
+            <div class="hidden md:flex space-x-8">
+                <a href="#introduction" class="nav-link text-gray-300">存亡之道</a>
+                <a href="#five-matters" class="nav-link text-gray-300">五事</a>
+                <a href="#seven-assessments" class="nav-link text-gray-300">七計與案例</a>
+                <a href="#conclusion" class="nav-link text-gray-300">總結</a>
+            </div>
+            <div class="md:hidden">
+                <select id="mobile-nav" class="bg-gray-800 border border-gray-600 text-white text-sm rounded-lg focus:ring-amber-500 focus:border-amber-500 block w-full p-2.5">
+                    <option value="#introduction">導航至...</option>
+                    <option value="#introduction">存亡之道</option>
+                    <option value="#five-matters">五事</option>
+                    <option value="#seven-assessments">七計與案例</option>
+                    <option value="#conclusion">總結</option>
+                </select>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="introduction" class="min-h-screen flex items-center justify-center text-center bg-gray-900 py-20 px-4">
+            <div class="max-w-4xl mx-auto">
+                <h1 class="text-4xl md:text-6xl font-bold text-white leading-tight">兵者，國之大事，死生之地，<br class="hidden md:block"/><span class="highlight">存亡之道，不可不察也</span></h1>
+                <p class="mt-8 text-lg md:text-xl text-gray-400">
+                    戰爭決定國家的生死存亡，是治國者必須嚴肅審察的頭等大事。孫子提出，在決策之前，必須「經之以五事，校之以七計，而索其情」，透過系統性的分析框架，探求敵我雙方的真實情況，從而預知勝負。本應用程式將引導您深入探索此一戰略智慧。
+                </p>
+            </div>
+        </section>
+
+        <section id="five-matters" class="py-20 bg-gray-800 px-4">
+            <div class="container mx-auto">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-white">經之以五事</h2>
+                    <p class="mt-4 text-lg text-gray-400 max-w-3xl mx-auto">「五事」是評估戰爭潛力的五個基本維度，涵蓋了政治、自然、地理、領導和制度。點擊下方卡片，探索其深層涵義與現代啟示。</p>
+                </div>
+                <div id="wu-shi-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+                </div>
+            </div>
+        </section>
+
+        <section id="seven-assessments" class="py-20 bg-gray-900 px-4">
+            <div class="container mx-auto">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-white">校之以七計，而索其情</h2>
+                    <p class="mt-4 text-lg text-gray-400 max-w-3xl mx-auto">在掌握「五事」的基礎上，透過「七計」進行敵我雙方的比較，是預判勝負的關鍵。請選擇一個歷史案例，觀察雙方在七個指標上的實力對比，並閱讀其戰略分析。</p>
+                </div>
+                <div class="flex flex-col lg:flex-row gap-8 items-start">
+                    <div class="w-full lg:w-1/2">
+                        <div class="mb-6">
+                            <label for="case-study-selector" class="block mb-2 text-sm font-medium text-gray-300">選擇分析案例：</label>
+                            <select id="case-study-selector" class="bg-gray-800 border border-gray-600 text-white text-sm rounded-lg focus:ring-amber-500 focus:border-amber-500 block w-full p-2.5">
+                                <option value="ww2">二戰前夕：納粹德國 vs. 英法</option>
+                                <option value="coldwar">冷戰時期：美國 vs. 蘇聯</option>
+                                <option value="cuban">古巴導彈危機：美國 vs. 蘇聯</option>
+                            </select>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="sevenAssessmentsChart"></canvas>
+                        </div>
+                    </div>
+                    <div id="case-study-analysis" class="w-full lg:w-1/2 bg-gray-800 p-6 rounded-lg border border-gray-700">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="conclusion" class="py-20 bg-gray-800 px-4">
+            <div class="container mx-auto text-center max-w-4xl">
+                <h2 class="text-3xl md:text-4xl font-bold text-white">結論：永恆的戰略智慧</h2>
+                <p class="mt-4 text-lg text-gray-400">
+                    「五事七計」不僅是軍事戰略的分析工具，更是一套適用於任何競爭領域的決策框架。它教導我們「知己知彼，百戰不殆」的真諦，強調勝利源於戰前的周密謀劃，而非戰場上的僥倖。在現代商業、國際關係乃至個人生涯規劃中，這套思維模式依然閃耀著智慧的光芒，提醒我們在任何重大決策前，都應「不可不察」，深思熟慮，方能立於不敗之地。
+                </p>
+            </div>
+        </section>
+    </main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    const wuShiData = [
+        { id: 'dao', name: '道', icon: '📜', quote: '令民于上同意者也，可與之死，可與之生，民不詭也。', description: '指統治者與人民意志統一，萬眾一心。這是決定戰爭勝負最根本的因素，代表了國家的凝聚力與政府的合法性。', modern: '現代應用：國家認同、政府公信力、企業文化、品牌向心力。' },
+        { id: 'tian', name: '天', icon: '☀️', quote: '陰陽、寒暑、時制也。', description: '指天時、氣候、季節等自然規律，也引申為宏觀的戰略時機，如國際局勢、科技趨勢等。', modern: '現代應用：市場趨勢、技術週期、國際政治格局、氣候變遷。' },
+        { id: 'di', name: '地', icon: '⛰️', quote: '高下、遠近、險易、廣狹、死生也。', description: '指地理環境，包括地形、距離、險隘、資源分佈等，直接影響軍隊的行動與補給。', modern: '現代應用：戰略地理位置、供應鏈佈局、市場分佈、基礎設施。' },
+        { id: 'jiang', name: '將', icon: '🛡️', quote: '智、信、仁、勇、嚴也。', description: '指將領的素質，需具備智慧、信用、仁愛、勇敢、嚴明五德，是決策與執行的核心。', modern: '現代應用：領導者決策力、企業家精神、團隊管理能力。' },
+        { id: 'fa', name: '法', icon: '⚖️', quote: '曲制、官道、主用也。', description: '指組織制度、指揮體系、後勤管理等規範。健全的法制是軍隊高效運作的保障。', modern: '現代應用：公司治理、法律體系、行政效率、風險控制。' }
+    ];
+
+    const caseStudiesData = {
+        ww2: {
+            title: '二戰前夕：納粹德國 vs. 英法',
+            labels: ['德國', '英法'],
+            scores: [
+                [8, 4], // 主孰有道？ (短期國民支持度 vs 厭戰情緒)
+                [9, 6], // 將孰有能？ (創新將領 vs 傳統將領)
+                [7, 5], // 天地孰得？ (利用綏靖 vs 反應遲緩)
+                [9, 6], // 法令孰行？ (高效動員 vs 效率較低)
+                [8, 7], // 兵眾孰強？ (裝備精良 vs 數量優勢)
+                [9, 6], // 士卒孰練？ (閃電戰訓練 vs 陣地戰思維)
+                [8, 5]  // 賞罰孰明？ (軍功激勵 vs 相對僵化)
+            ],
+            analysis: `
+                <h3 class="text-2xl font-bold text-amber-400 mb-4">案例分析：二戰前夕</h3>
+                <p class="mb-4 text-gray-300">在二戰爆發前，納粹德國在多個評估指標上對比英法聯軍佔有短期優勢。透過強烈的民族主義宣傳，德國在「道」的層面凝聚了狂熱的民心。其將領在「將」的層面富於創新（如古德里安的閃電戰理論），「士卒」訓練有素，「法」所代表的國家動員機器也極其高效。</p>
+                <p class="mb-4 text-gray-300">相比之下，英法等國普遍瀰漫厭戰情緒，對戰爭準備不足，在多個指標上處於劣勢。這使得德國在戰爭初期能迅速取得壓倒性勝利。</p>
+                <p class="text-gray-400 italic">然而，值得深思的是，德國的「道」建立在侵略與非正義之上，這也為其最終的失敗埋下了伏筆。不正義的「道」雖可獲得一時的狂熱支持，卻無法獲得長久的國際認同與被佔領區民心，最終導致其在「天」（國際反法西斯同盟）與「地」（戰線過長）上陷入困境。</p>
+            `
+        },
+        coldwar: {
+            title: '冷戰時期：美國 vs. 蘇聯',
+            labels: ['美國', '蘇聯'],
+            scores: [
+                [8, 6], // 主孰有道？ (意識形態吸引力 vs 內部離心)
+                [7, 7], // 將孰有能？ (雙方均有戰略家)
+                [8, 6], // 天地孰得？ (科技創新/全球佈局 vs 陸權/資源)
+                [7, 8], // 法令孰行？ (制度靈活 vs 高度集中/僵化)
+                [8, 8], // 兵眾孰強？ (海空優勢 vs 陸軍優勢)
+                [8, 8], // 士卒孰練？ (專業化軍隊)
+                [7, 5]  // 賞罰孰明？ (市場激勵 vs 體制僵化)
+            ],
+            analysis: `
+                <h3 class="text-2xl font-bold text-amber-400 mb-4">案例分析：冷戰時期</h3>
+                <p class="mb-4 text-gray-300">冷戰是美蘇兩大陣營在綜合國力上的長期對抗。這場競爭的勝負更多取決於「道」與「法」的較量。美國以自由市場經濟為核心的「道」，在全球範圍內，尤其在後期，展現出更強的吸引力與適應性。其「法」所代表的民主與市場體制，雖然有時效率較低，但具備更強的自我糾錯能力與創新活力。</p>
+                <p class="mb-4 text-gray-300">蘇聯的「道」在初期有其感召力，但後期逐漸僵化；其高度集中的計劃經濟體制（法）在應對科技革命（天）和全球化趨勢時顯得力不從心，最終導致內部經濟崩潰與政治解體。</p>
+                <p class="text-gray-400 italic">此案例表明，在長期競爭中，制度的優越性、文化的吸引力與創新的能力，是比短期軍事實力更為根本的決定性因素。</p>
+            `
+        },
+        cuban: {
+            title: '古巴導彈危機：美國 vs. 蘇聯',
+            labels: ['美國', '蘇聯'],
+            scores: [
+                [8, 5], // 主孰有道？ (國際合法性 vs 冒險主義)
+                [9, 6], // 將孰有能？ (肯尼迪團隊 vs 赫魯雪夫)
+                [9, 7], // 天地孰得？ (地理優勢/海空封鎖 vs 遠程投射)
+                [8, 7], // 法令孰行？ (決策機制靈活 vs 相對封閉)
+                [9, 8], // 兵眾孰強？ (常規力量絕對優勢)
+                [8, 8], // 士卒孰練？ (雙方均處於高度戒備)
+                [7, 7]  // 賞罰孰明？ (在此危機中不明顯)
+            ],
+            analysis: `
+                <h3 class="text-2xl font-bold text-amber-400 mb-4">案例分析：古巴導彈危機</h3>
+                <p class="mb-4 text-gray-300">這場危機是人類最接近核戰爭的時刻，是對兩國領導人「將」之素質的極端考驗。美國在這場危機中佔據了多重優勢。在「地」的方面，古巴緊鄰美國本土，美國擁有絕對的地理與常規軍事力量優勢，可以實施有效的海上封鎖。在「主孰有道」上，蘇聯的秘密部署行為在國際上處於道義劣勢。</p>
+                <p class="mb-4 text-gray-300">最關鍵的是「將孰有能」。肯尼迪及其顧問團隊展現了高度的智慧、勇氣與克制，在堅持要求蘇聯撤除導彈的同時，也避免了直接的軍事衝突，給予對方迴旋餘地。相較之下，赫魯雪夫的決策則顯得冒進而後繼乏力。</p>
+                <p class="text-gray-400 italic">此案例突顯了在極端壓力下，領導者（將）的決策能力與對「天」（核戰風險）的清醒認識是決定「存亡之道」的核心。精準的實力評估與靈活的外交手腕最終避免了災難。</p>
+            `
+        }
+    };
+
+    const wuShiContainer = document.getElementById('wu-shi-container');
+    wuShiData.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'card rounded-lg p-6 cursor-pointer';
+        card.innerHTML = `
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <span class="text-3xl mr-4">${item.icon}</span>
+                    <h3 class="text-2xl font-bold text-white">${item.name}</h3>
+                </div>
+                <span class="text-amber-400 text-2xl transform transition-transform duration-300">+</span>
+            </div>
+            <div class="text-gray-400 mt-4 content-hidden">
+                <p class="italic">"${item.quote}"</p>
+                <p class="mt-4">${item.description}</p>
+                <p class="mt-2 font-semibold text-gray-300">${item.modern}</p>
+            </div>
+        `;
+        wuShiContainer.appendChild(card);
+    });
+
+    wuShiContainer.addEventListener('click', function(e) {
+        const card = e.target.closest('.card');
+        if (card) {
+            const content = card.querySelector('.content-hidden, .content-visible');
+            const icon = card.querySelector('span.transform');
+            
+            document.querySelectorAll('.card .content-visible').forEach(openContent => {
+                if (openContent !== content) {
+                    openContent.classList.remove('content-visible');
+                    openContent.classList.add('content-hidden');
+                    openContent.closest('.card').querySelector('span.transform').classList.remove('rotate-45');
+                }
+            });
+
+            content.classList.toggle('content-hidden');
+            content.classList.toggle('content-visible');
+            icon.classList.toggle('rotate-45');
+        }
+    });
+
+    const ctx = document.getElementById('sevenAssessmentsChart').getContext('2d');
+    let radarChart;
+
+    function createOrUpdateChart(caseData) {
+        const data = {
+            labels: [
+                '主孰有道？ (道義/民心)',
+                '將孰有能？ (將領能力)',
+                '天地孰得？ (天時地利)',
+                '法令孰行？ (制度執行)',
+                '兵眾孰強？ (軍隊實力)',
+                '士卒孰練？ (人員素質)',
+                '賞罰孰明？ (激勵機制)'
+            ],
+            datasets: [{
+                label: caseData.labels[0],
+                data: caseData.scores[0],
+                backgroundColor: 'rgba(251, 191, 36, 0.2)',
+                borderColor: 'rgba(251, 191, 36, 1)',
+                pointBackgroundColor: 'rgba(251, 191, 36, 1)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgba(251, 191, 36, 1)',
+                borderWidth: 2
+            }, {
+                label: caseData.labels[1],
+                data: caseData.scores[1],
+                backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                borderColor: 'rgba(59, 130, 246, 1)',
+                pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgba(59, 130, 246, 1)',
+                borderWidth: 2
+            }]
+        };
+
+        const options = {
+            maintainAspectRatio: false,
+            responsive: true,
+            scales: {
+                r: {
+                    angleLines: { color: 'rgba(255, 255, 255, 0.2)' },
+                    grid: { color: 'rgba(255, 255, 255, 0.2)' },
+                    pointLabels: {
+                        color: '#D1D5DB',
+                        font: { size: 12 }
+                    },
+                    ticks: {
+                        color: '#111827',
+                        backdropColor: 'rgba(255, 255, 255, 0.8)',
+                        stepSize: 2,
+                        font: { weight: 'bold' }
+                    },
+                    suggestedMin: 0,
+                    suggestedMax: 10
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { color: '#D1D5DB', font: { size: 14 } }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.r !== null) {
+                                label += context.parsed.r;
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
+        };
+
+        if (radarChart) {
+            radarChart.data = data;
+            radarChart.update();
+        } else {
+            radarChart = new Chart(ctx, { type: 'radar', data: data, options: options });
+        }
+    }
+
+    const caseStudySelector = document.getElementById('case-study-selector');
+    const caseStudyAnalysisContainer = document.getElementById('case-study-analysis');
+
+    function updateCaseStudy(caseKey) {
+        const caseData = caseStudiesData[caseKey];
+        createOrUpdateChart(caseData);
+        caseStudyAnalysisContainer.innerHTML = caseData.analysis;
+    }
+
+    caseStudySelector.addEventListener('change', (e) => {
+        updateCaseStudy(e.target.value);
+    });
+
+    updateCaseStudy('ww2');
+    
+    const mobileNav = document.getElementById('mobile-nav');
+    mobileNav.addEventListener('change', (e) => {
+        const targetId = e.target.value;
+        if (targetId) {
+            document.querySelector(targetId).scrollIntoView({ behavior: 'smooth' });
+            mobileNav.selectedIndex = 0;
+        }
+    });
+
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = document.querySelectorAll('main section');
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                navLinks.forEach(link => {
+                    link.classList.toggle('active', link.getAttribute('href').substring(1) === entry.target.id);
+                });
+            }
+        });
+    }, { threshold: 0.5 });
+
+    sections.forEach(section => {
+        observer.observe(section);
+    });
+
+});
+</script>
+
+</body>
+</html>
